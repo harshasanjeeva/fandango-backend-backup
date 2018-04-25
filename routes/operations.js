@@ -6,7 +6,7 @@ var kafka = require('./kafka/client');
 //var url = 'mongodb://localhost:27017/freelancer';
 
 var session = require('client-sessions');
-var url='mongodb://FANDANGO:fandango1@ds251819.mlab.com:51819/fandango'
+var url='mongodb://devfandango:fandango1@ds251819.mlab.com:51819/fandango'
 var expressSessions = require("express-session");
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
