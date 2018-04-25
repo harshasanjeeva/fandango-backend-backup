@@ -4,7 +4,7 @@ var connected = false;
 var assert = require('assert');
 var ObjectId = require('mongodb').ObjectID;
 //var url = 'mongodb://localhost:27017/freelancer'
-var url = 'mongodb://FANDANGO:fandango1@ds251819.mlab.com:51819/fandango';
+var url = 'mongodb://devfandango:fandango1@ds251819.mlab.com:51819/fandango';
 
 /**
  * Connects to the MongoDB Database with the provided URL
