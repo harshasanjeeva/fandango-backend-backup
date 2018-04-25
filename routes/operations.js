@@ -113,4 +113,52 @@ router.post('/signup', function (req, res, next) {
         })
  });
 });
+
+router.post('/ticketing', function (req, res, next) {
+
+    var email = req.body.email;
+    var user_id = req.body.user_id;
+    var movie_id = req.body.movie_id;
+    var general = req.body.general;
+    var student = req.body.student;
+    var children=req.body.children;
+    var general_amount = req.body.general_amount;
+    var student_amount=req.body.student_amount;
+    var children_amount = req.body.children_amount;
+
+    var total=general_amount+student_amount+children_amount;
+
+    console.log("reached login");
+
+    var data = {
+        user_id:user_id,
+        email : email,
+        movie_id : movie_id,
+        general : general,
+        student : student,
+        children : children,
+        general_amount : general_amount,
+        student_amount : student_amount,
+        children_amount : children_amount,
+        total:total
+    }
+    mongo.connect(function (db) {
+        console.log("Connected to MongoDB at ",url);
+
+        mongo.insertDocument(db,'bookingtable',data,function (err,results) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: '401'
+                });
+            }
+            else {
+                console.log("Booking Made Successful")
+                res.json({
+                    data:data
+                });
+            }
+        })
+    });
+});
 module.exports = router;
