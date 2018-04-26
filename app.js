@@ -12,7 +12,8 @@ var operations = require('./routes/operations');
 var logout = require('./routes/logout');
 var app = express();
 var passport = require('passport');
-var mongoSessionURL = "mongodb://localhost:27017/sessions";
+
+/*var mongoSessionURL = "mongodb://devfandango:fandango1@ds251819.mlab.com:51819/sessions";*/
 var expressSessions = require("express-session");
 require('./routes/mongodb/login')(passport);
 var mongoStore = require('connect-mongo')(expressSessions);
@@ -27,6 +28,7 @@ app.use(cors(corsOptions));
 //app.use(expressValidator());
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+/*
 
 app.use(expressSessions({
     secret: "CMPE273_passport",
@@ -39,6 +41,7 @@ app.use(expressSessions({
     })
 })
 );
+*/
 
 app.use(passport.initialize());
 app.use(passport.session())
@@ -49,7 +52,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/operations', operations);
-app.listen(3001, () => console.log('React App Listening on port 3k1!'));
+app.listen(3001, function () {
+
+    console.log('React App Listening on port 3k1!')
+
+});
+
+
+
 
 app.post('/login', function(req, res) {
     passport.authenticate('login', function(err, user) {

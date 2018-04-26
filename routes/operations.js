@@ -6,7 +6,7 @@ var kafka = require('./kafka/client');
 //var url = 'mongodb://localhost:27017/freelancer';
 
 var session = require('client-sessions');
-var url='mongodb://FANDANGO:fandango1@ds251819.mlab.com:51819/fandango'
+var url='mongodb://devfandango:fandango1@ds251819.mlab.com:51819/fandango'
 var expressSessions = require("express-session");
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
@@ -159,6 +159,33 @@ router.post('/ticketing', function (req, res, next) {
                 });
             }
         })
+    });
+});
+
+router.post('/getmovies', function (req, res, next) {
+
+    console.log("Reached all get movies");
+    mongo.connect(function (db) {
+        console.log("Connected to MongoDB at ", url)
+
+        mongo.connect(function (db) {
+            var coll = db.collection('movietable');
+            console.log("dummy");
+            coll.find({}).toArray(function (err, user) {
+                if (err) {
+                    console.log("err")
+                    res.json({
+                        status: '401'
+                    });
+                }
+                else {
+                    console.log("no err",user)
+                    // res.json({
+                    //     moviedata: user
+                    // });
+                }
+            });
+        });
     });
 });
 module.exports = router;
