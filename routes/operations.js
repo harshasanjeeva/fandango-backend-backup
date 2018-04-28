@@ -114,7 +114,6 @@ router.post('/signup', function (req, res, next) {
  });
 });
 
-<<<<<<< HEAD
 
 
 
@@ -212,7 +211,6 @@ router.post('/editprofile',function (req, res, next) {
 
 
 
-=======
 router.post('/ticketing', function (req, res, next) {
 
     var email = req.body.email;
@@ -328,7 +326,6 @@ router.post('/addmovies', function (req, res, next) {
     });
 });
 
->>>>>>> 6df025a1552533e4f5ea5fff9f94b2f11dfc9d6d
 router.post('/getmovies', function (req, res, next) {
 
     console.log("Reached all get movies");
@@ -347,24 +344,15 @@ router.post('/getmovies', function (req, res, next) {
                 }
                 else {
                     console.log("no err",user)
-<<<<<<< HEAD
                     res.json({
                         moviedata: user
                     });
-=======
-                    // res.json({
-                    //     moviedata: user
-                    // });
->>>>>>> 6df025a1552533e4f5ea5fff9f94b2f11dfc9d6d
                 }
             });
         });
     });
 });
 
-<<<<<<< HEAD
-
-=======
 router.post('/addhall', function (req, res, next) {
     console.log("in addhall");
 
@@ -414,5 +402,4 @@ router.post('/addhall', function (req, res, next) {
 
     });
 });
->>>>>>> 6df025a1552533e4f5ea5fff9f94b2f11dfc9d6d
 module.exports = router;
