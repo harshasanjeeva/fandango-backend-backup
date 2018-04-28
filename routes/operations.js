@@ -1,8 +1,11 @@
+//import { parse } from 'url';
+
 var express = require('express');
 var router = express.Router();
 //var expressValidator = require('express-validator');
 var mongo = require('./mongodb/mongo');
 var kafka = require('./kafka/client');
+var loginStatus=false;
 //var url = 'mongodb://localhost:27017/freelancer';
 
 var session = require('client-sessions');
@@ -54,6 +57,40 @@ router.post('/login', function (req, res, next) {
                         });
                 }
             });
+    });
+});
+
+
+router.post('/adminLogin', function (req, res, next) {
+
+    var email = req.body.email;
+    var password = req.body.password;
+    console.log("reached login");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('administrator');
+        coll.findOne({'email': email, 'password': password}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            if (!user) {
+                console.log('Admin Not Found with email ' + email);
+                res.json({
+                    status: false
+                });
+            }
+            else {
+
+                //dummy=user.Username;
+                res.json({
+                    email: email,
+                    status: true,
+                    user_id: user.user_id
+                });
+            }
+        });
     });
 });
 
@@ -208,9 +245,6 @@ router.post('/editprofile',function (req, res, next) {
 
 
 
-
-
-
 router.post('/ticketing', function (req, res, next) {
 
     var email = req.body.email;
@@ -353,8 +387,208 @@ router.post('/getmovies', function (req, res, next) {
     });
 });
 
-router.post('/addhall', function (req, res, next) {
+
+
+router.post('/addHall', function (req, res, next) {
     console.log("in addhall");
+
+    var hallName = req.body.hallName;
+    var hallId = req.body.hallId;
+    var hallAddress = req.body.hallAddress;
+    var type = req.body.type;
+    console.log("type is"+ type);
+    var data = {
+        hallName : hallName,
+        hallId : hallId,
+        hallAddress : hallAddress
+    }
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+
+        if(type==='add') {
+            console.log("in adder");
+
+            mongo.insertDocument(db, 'addhall', data, function (err, results) {
+                if (err) {
+                    console.log("sending status 401")
+                    res.json({
+                        status: false
+                    });
+                }
+                else {
+                    console.log("Movie hall added successfully")
+                    var path = results["ops"][0]["_id"];
+                    console.log(path);
+                    res.json({
+                        status: true,
+                    });
+                }
+            });
+        }
+        else {
+
+            console.log("in update function", hallId, hallName, hallAddress);
+            var myquery = {hallId: hallId};
+            var coll = db.collection('addhall');
+            var newvalues = {$set: {hallName: hallName, hallAddress: hallAddress}};
+            coll.updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("1 document updated");
+                db.close();
+            });
+        }
+
+    });
+});
+
+
+router.post('/getMovieHalls', function (req, res, next) {
+
+    console.log("Reached all get halls");
+    mongo.connect(function (db) {
+        console.log("Connected to MongoDB at ", url)
+
+        mongo.connect(function (db) {
+            var coll = db.collection('addhall');
+            console.log("dummy");
+            coll.find({}).toArray(function (err, user) {
+                if (err) {
+                    console.log("err")
+                    res.json({
+                        status: '401'
+                    });
+                }
+                else {
+                    console.log("no err",user)
+                    res.json({
+                        hallData: user
+                    });
+
+                }
+            });
+        });
+    });
+});
+
+
+router.post('/analytics', function (req, res, next) {
+    console.log("analytics",req.body)
+var numofclicks = req.body.numofclick;
+var componentname = req.body.componentname;
+var userid = req.body.userid;
+console.log("num of clicks",numofclicks)
+
+ var   data={
+        numofclicks:numofclicks,
+        componentname:componentname,
+        userid:userid
+    }
+
+    mongo.connect(function(db){
+
+        var ana = db.collection('analytics');
+       
+        ana.find({"userid":userid,"componentname":componentname}).toArray(function (err, user) {
+            if (err) {
+                console.log("err")
+                res.json({
+                    status: '401'
+                });
+            }
+            else if(user.length<1){
+
+                mongo.insertDocument(db,'analytics',data,function (err,results) {
+                    if (err) {
+                        console.log("sending status 401")
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log("User Added to Hall")
+                        var path = results["ops"][0]["_id"];
+                        console.log(path);
+                        res.json({
+                            status: true,
+                        });
+                    }
+                });
+   
+            }
+            else {
+                    console.log("user",user)
+                var myquery = {"userid":userid,"componentname":componentname};
+                var oldclick = user[0].numofclicks;
+             
+                console.log("old click",user.numofclicks,user[0])
+                var newvalues = {$set: {"numofclicks": (parseFloat(numofclicks) + parseFloat(oldclick))}};
+                ana.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("one doc updated");
+                    db.close();
+                });
+            }
+        });
+
+
+
+
+
+
+
+
+    });
+
+
+
+
+    });
+
+
+
+router.post('/addUserToHall', function (req, res, next) {
+    console.log("in addhall");
+
+    var hallUserEmail = req.body.email;
+    var hallId = req.body.hallId;
+    var password = req.body.password;
+    var hallUserId =  Math.floor(Math.random() * Math.floor(9999));
+    var data = {
+        hallUserEmail : hallUserEmail,
+        hallId : hallId,
+        password:password,
+        hallUserId:hallUserId
+    }
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+
+        mongo.insertDocument(db,'UserHall',data,function (err,results) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
+                });
+            }
+            else {
+                console.log("User Added to Hall")
+                var path = results["ops"][0]["_id"];
+                console.log(path);
+                res.json({
+                    status: true,
+                });
+            }
+        });
+
+
+    });
+});
+
+
+
+router.post('/payment', function (req, res, next) {
+    console.log("in payment");
 
     var time1 = req.body.time1;
     var time2 = req.body.time2;
@@ -382,24 +616,50 @@ router.post('/addhall', function (req, res, next) {
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-                mongo.insertDocument(db,'addhall',data,function (err,results) {
-                    if (err) {
-                        console.log("sending status 401")
-                        res.json({
-                            status: false
-                        });
-                    }
-                    else {
-                        console.log("Movie hall added successfully")
-                        var path = results["ops"][0]["_id"];
-                        console.log(path);
-                        res.json({
-                            status: true,
-                        });
-                    }
+        mongo.insertDocument(db,'addhall',data,function (err,results) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
                 });
+            }
+            else {
+                console.log("Movie hall added successfully")
+                var path = results["ops"][0]["_id"];
+                console.log(path);
+                res.json({
+                    status: true,
+                });
+            }
+        });
+    });
+});
 
 
+router.post('/viewAllUsers', function (req, res, next) {
+
+
+    var hallId = req.body.hallId;
+    console.log("in payment",hallId);
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+        var coll = db.collection("UserHall");
+        coll.find({hallId:hallId}).toArray(function(err, user) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
+                });
+            }
+            else {
+
+                console.log("no err",user)
+                res.json({
+                    userData: user
+                });
+            }
+        });
     });
 });
 module.exports = router;
