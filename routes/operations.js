@@ -294,26 +294,27 @@ router.post('/ticketing', function (req, res, next) {
 router.post('/addmovies', function (req, res, next) {
     console.log("in addmovies");
 
-    var title = req.body.title;
-    var trailer = req.body.trailer;
+    var movieId =  Math.floor(Math.random() * Math.floor(9999));
+    var movieName = req.body.movieName;
     var cast = req.body.cast;
-    var user_id =  Math.floor(Math.random() * Math.floor(9999));
-    var release_date = req.body.release_date;
+    var movieTiming=req.body.movieTiming;
+    var movieType=req.body.movieType;
+    var movieVideoLink=req.body.movieVideoLink;
     var rating = req.body.rating;
     var photos = req.body.photos;
     var length = req.body.length;
-    var theatres = req.body.theatres;
     var reviews = req.body.reviews;
 
     var data = {
-        title : title,
-        trailer : trailer,
+        movieId : movieId,
+        movieName : movieName,
         cast : cast,
-        release_date: release_date,
-        rating: rating,
+        movieTiming: movieTiming,
+        movieType: movieType,
+        rating:rating,
+        movieVideoLink:movieVideoLink,
         photos: photos,
         length: length,
-        theatres: theatres,
         reviews: reviews
 
 
@@ -322,8 +323,8 @@ router.post('/addmovies', function (req, res, next) {
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-        var coll = db.collection('addmovie');
-        coll.findOne({'title':title},function (err,user) {
+        var coll = db.collection('movietable');
+        coll.findOne({'movieName':movieName},function (err,user) {
             if(err){
                 console.log("sending status 401")
                 res.json({
@@ -331,14 +332,18 @@ router.post('/addmovies', function (req, res, next) {
                 });
             }
             else if(user){
-                console.log("sending status 401")
-                res.json({
-                    status : false
+                var myquery = {movieName: movieName};
+                var coll = db.collection('movietable');
+                var newvalues = {$set: {cast: cast, movieTiming: movieTiming,movieType:movieType,rating:rating,movieVideoLink:movieVideoLink,photos:photos,length:length,reviews:reviews}};
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
                 });
             }
 
             else{
-                mongo.insertDocument(db,'addmovie',data,function (err,results) {
+                mongo.insertDocument(db,'movietable',data,function (err,results) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -477,11 +482,13 @@ router.post('/getMovieHalls', function (req, res, next) {
 });
 
 router.post('/addUserToHall', function (req, res, next) {
-    console.log("in addhall");
+    console.log("in addUserToHall");
 
     var hallUserEmail = req.body.email;
+    var userEmail = req.body.hallUserEmail;
     var hallId = req.body.hallId;
     var password = req.body.password;
+    console.log("in addUserToHall"+hallUserEmail+userEmail+hallId+password);
     var hallUserId =  Math.floor(Math.random() * Math.floor(9999));
     var data = {
         hallUserEmail : hallUserEmail,
@@ -490,28 +497,55 @@ router.post('/addUserToHall', function (req, res, next) {
         hallUserId:hallUserId
     }
 
-    mongo.connect(function(db){
-        console.log("Connected to MongoDB at ",url)
-
-        mongo.insertDocument(db,'UserHall',data,function (err,results) {
+    mongo.connect(function(db) {
+        var coll = db.collection('UserHall');
+        coll.findOne({'hallUserEmail': userEmail}, function (err, user) {
             if (err) {
                 console.log("sending status 401")
                 res.json({
                     status: false
                 });
             }
-            else {
-                console.log("User Added to Hall")
-                var path = results["ops"][0]["_id"];
-                console.log(path);
-                res.json({
-                    status: true,
+            else if (user) {
+                var myquery = {hallUserEmail: userEmail};
+                var coll = db.collection('UserHall');
+                var newvalues = {
+                    $set: {
+                        hallUserEmail: hallUserEmail,
+                        password: password,
+                        hallUserId: hallUserId
+                    }
+                };
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
                 });
             }
-        });
 
-
+            else {
+                mongo.insertDocument(db, 'UserHall', data, function (err, results) {
+                    if (err) {
+                        console.log("sending status 401")
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log("User Added to Hall")
+                        var path = results["ops"][0]["_id"];
+                        console.log(path);
+                        res.json({
+                            status: true,
+                        });
+                    }
+                });
+            }
+        })
     });
+
+
+
 });
 
 
