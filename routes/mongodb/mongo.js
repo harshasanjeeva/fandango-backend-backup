@@ -61,6 +61,7 @@ exports.deleteDocument = function (db,collection, data,callback) {
     });
 };
 
+
 /**
  * save document in given collection
  */
@@ -89,3 +90,14 @@ exports.findAndModifyDocument = function (db,collection, data) {
         {$set:{fname:data.fname,lname:data.lname}},
         { new:true }
 )};
+
+exports.findAndUpdateHall = function (db,collection,data) {
+    var coll = db.collection(collection);
+    var myquery = {hallId: data.hallId};
+    var newvalues = {$set: {hallName: data.hallName, hallAddress: data.hallAddress}};
+    coll.updateOne(myquery, newvalues, function (err, res) {
+        if (err) throw err;
+        console.log("1 document updated");
+        db.close();
+    });
+}
