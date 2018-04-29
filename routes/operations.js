@@ -292,39 +292,39 @@ router.post('/ticketing', function (req, res, next) {
         })
     })
 })
+
 router.post('/addmovies', function (req, res, next) {
     console.log("in addmovies");
 
-    var title = req.body.title;
-    var trailer = req.body.trailer;
+    var movieId =  Math.floor(Math.random() * Math.floor(9999));
+    var movieName = req.body.movieName;
     var cast = req.body.cast;
-    var user_id =  Math.floor(Math.random() * Math.floor(9999));
-    var release_date = req.body.release_date;
+    var movieTiming=req.body.movieTiming;
+    var movieType=req.body.movieType;
+    var movieVideoLink=req.body.movieVideoLink;
     var rating = req.body.rating;
     var photos = req.body.photos;
     var length = req.body.length;
-    var theatres = req.body.theatres;
     var reviews = req.body.reviews;
 
     var data = {
-        title : title,
-        trailer : trailer,
+        movieId : movieId,
+        movieName : movieName,
         cast : cast,
-        release_date: release_date,
-        rating: rating,
+        movieTiming: movieTiming,
+        movieType: movieType,
+        rating:rating,
+        movieVideoLink:movieVideoLink,
         photos: photos,
         length: length,
-        theatres: theatres,
         reviews: reviews
-
-
     }
 
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-        var coll = db.collection('addmovie');
-        coll.findOne({'title':title},function (err,user) {
+        var coll = db.collection('movietable');
+        coll.findOne({'movieName':movieName},function (err,user) {
             if(err){
                 console.log("sending status 401")
                 res.json({
@@ -332,14 +332,18 @@ router.post('/addmovies', function (req, res, next) {
                 });
             }
             else if(user){
-                console.log("sending status 401")
-                res.json({
-                    status : false
+                var myquery = {movieName: movieName};
+                var coll = db.collection('movietable');
+                var newvalues = {$set: {cast: cast, movieTiming: movieTiming,movieType:movieType,rating:rating,movieVideoLink:movieVideoLink,photos:photos,length:length,reviews:reviews}};
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
                 });
             }
 
             else{
-                mongo.insertDocument(db,'addmovie',data,function (err,results) {
+                mongo.insertDocument(db,'movietable',data,function (err,results) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -548,11 +552,13 @@ console.log("num of clicks",numofclicks)
 
 
 router.post('/addUserToHall', function (req, res, next) {
-    console.log("in addhall");
+    console.log("in addUserToHall");
 
     var hallUserEmail = req.body.email;
+    var userEmail = req.body.hallUserEmail;
     var hallId = req.body.hallId;
     var password = req.body.password;
+    console.log("in addUserToHall"+hallUserEmail+userEmail+hallId+password);
     var hallUserId =  Math.floor(Math.random() * Math.floor(9999));
     var data = {
         hallUserEmail : hallUserEmail,
@@ -561,62 +567,101 @@ router.post('/addUserToHall', function (req, res, next) {
         hallUserId:hallUserId
     }
 
-    mongo.connect(function(db){
-        console.log("Connected to MongoDB at ",url)
-
-        mongo.insertDocument(db,'UserHall',data,function (err,results) {
+    mongo.connect(function(db) {
+        var coll = db.collection('UserHall');
+        coll.findOne({'hallUserEmail': userEmail}, function (err, user) {
             if (err) {
                 console.log("sending status 401")
                 res.json({
                     status: false
                 });
             }
-            else {
-                console.log("User Added to Hall")
-                var path = results["ops"][0]["_id"];
-                console.log(path);
-                res.json({
-                    status: true,
+            else if (user) {
+                var myquery = {hallUserEmail: userEmail};
+                var coll = db.collection('UserHall');
+                var newvalues = {
+                    $set: {
+                        hallUserEmail: hallUserEmail,
+                        password: password,
+                        hallUserId: hallUserId
+                    }
+                };
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
                 });
             }
-        });
 
-
+            else {
+                mongo.insertDocument(db, 'UserHall', data, function (err, results) {
+                    if (err) {
+                        console.log("sending status 401")
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log("User Added to Hall")
+                        var path = results["ops"][0]["_id"];
+                        console.log(path);
+                        res.json({
+                            status: true,
+                        });
+                    }
+                });
+            }
+        })
     });
+
+
+
 });
 
 
 
 router.post('/payment', function (req, res, next) {
     console.log("in payment");
-
-    var time1 = req.body.time1;
-    var time2 = req.body.time2;
-    var time3 = req.body.time3;
-    var user_id =  Math.floor(Math.random() * Math.floor(9999));
-    var time4 = req.body.time4;
-    var time5 = req.body.time5;
-    var tickets = req.body.tickets;
-    var screen = req.body.screen;
-    var price = req.body.price;
+    var user_id = req.body.user_id;
+    var name = req.body.name;
+    var creditcard = req.body.creditcard;
+    var cvv = req.body.cvv;
+    var expdate = req.body.expdate;
+    var movieid = req.body.movieid;
+    var movieName = req.body.movieName;
+    var total_amount = req.body.total_amount;
+    var total_tickets = req.body.total_tickets;
+    var genre=req.body.genre;
+    var release=req.body.release;
+    var timings=req.body.timings;
+    var theatrename=req.body.theatrename;
+    var student=req.body.student;
+    var children=req.body.children;
+    var general=req.body.general;
 
     var data = {
-        time1 : time1,
-        time2 : time2,
-        time3 : time3,
-        time4: time4,
-        time5: time5,
-        tickets: tickets,
-        screen: screen,
-        price: price
-
-
+        user_id :user_id,
+        name : name,
+        creditcard: creditcard,
+        cvv : cvv,
+        expdate : expdate,
+        movieid : movieid,
+        movieName: movieName,
+        genre:genre,
+        release:release,
+        total_amount: total_amount,
+        total_tickets: total_tickets,
+        timings:timings,
+        theatrename:theatrename,
+        student:student,
+        children:children,
+        general:general
     }
 
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-        mongo.insertDocument(db,'addhall',data,function (err,results) {
+        mongo.insertDocument(db,'payment',data,function (err,results) {
             if (err) {
                 console.log("sending status 401")
                 res.json({
@@ -624,10 +669,11 @@ router.post('/payment', function (req, res, next) {
                 });
             }
             else {
-                console.log("Movie hall added successfully")
+                console.log("payment added successfully")
                 var path = results["ops"][0]["_id"];
                 console.log(path);
                 res.json({
+                    value:data,
                     status: true,
                 });
             }
@@ -636,16 +682,21 @@ router.post('/payment', function (req, res, next) {
 });
 
 
+
+
+
+
 router.post('/viewAllUsers', function (req, res, next) {
 
 
     var hallId = req.body.hallId;
-    console.log("in payment",hallId);
+    console.log("in viewAllUsers",hallId);
 
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
         var coll = db.collection("UserHall");
         coll.find({hallId:hallId}).toArray(function(err, user) {
+
             if (err) {
                 console.log("sending status 401")
                 res.json({
@@ -653,11 +704,144 @@ router.post('/viewAllUsers', function (req, res, next) {
                 });
             }
             else {
-
-                console.log("no err",user)
+                var path = results["ops"][0]["_id"];
+                console.log(path);
                 res.json({
-                    userData: user
+                    value:data,
+                    status: true,
                 });
+            }
+        });
+    });
+});
+
+
+router.post('/realticket', function (req, res, next) {
+
+    var user_id = Number(req.body.user_id);
+    console.log(user_id);
+    console.log("reached real ticket");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('payment');
+        coll.findOne({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                console.log(user);
+                res.json({
+                    bill: user
+                });
+            }
+        });
+    });
+});
+
+router.post('/editprofile', function (req, res, next) {
+
+    var user_id = req.body.user_id;
+    console.log(user_id);
+    console.log("reached real ticket");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('payment');
+        coll.findOne({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                res.json({
+                    bill: user
+                });
+            }
+        });
+    });
+});
+
+router.post('/delprofile', function (req, res, next) {
+
+    var user_id = req.body.user_id;
+    console.log(user_id);
+    console.log("reached delete profile");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('usertable');
+        coll.remove({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                res.json({
+                    status: true
+                });
+            }
+        });
+    });
+});
+
+router.post('/viewprofile', function (req, res) {
+
+    var user_id = req.body.userid;
+    console.log(user_id);
+    console.log("reached view profile");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('usertable');
+        coll.findOne({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                //res.send(404)
+            }
+            else {
+                var collect=db.collection('profiletable')
+                collect.findOne({'email':user.email}), function(err,results){
+                    if (err) {
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log(results)
+                        res.json({
+                            First_Name: results.First_Name,
+                            Last_Name: results.Last_Name,
+                            address: results.address,
+                            city: results.city,
+                            state: results.state,
+                            zipcode: results.zipcode,
+                            phone: results.phone,
+                            email: results.email
+                        });
+                    }
+                }
             }
         });
     });
