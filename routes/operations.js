@@ -1,8 +1,11 @@
+//import { parse } from 'url';
+
 var express = require('express');
 var router = express.Router();
 //var expressValidator = require('express-validator');
 var mongo = require('./mongodb/mongo');
 var kafka = require('./kafka/client');
+var loginStatus=false;
 //var url = 'mongodb://localhost:27017/freelancer';
 
 var session = require('client-sessions');
@@ -54,6 +57,40 @@ router.post('/login', function (req, res, next) {
                         });
                 }
             });
+    });
+});
+
+
+router.post('/adminLogin', function (req, res, next) {
+
+    var email = req.body.email;
+    var password = req.body.password;
+    console.log("reached login");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('administrator');
+        coll.findOne({'email': email, 'password': password}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            if (!user) {
+                console.log('Admin Not Found with email ' + email);
+                res.json({
+                    status: false
+                });
+            }
+            else {
+
+                //dummy=user.Username;
+                res.json({
+                    email: email,
+                    status: true,
+                    user_id: user.user_id
+                });
+            }
+        });
     });
 });
 
@@ -117,39 +154,45 @@ router.post('/signup', function (req, res, next) {
 
 
 
-
 router.post('/editprofile',function (req, res, next) {
 
-    console.log("body---->email",req.body)
-    
-    console.log("email :" +req.body.email);
-    console.log("phone :" +req.body.phone);
-    console.log("name :" +req.body.name);
-
-    console.log("userid :" +req.body.userid);
-    console.log("cardholder :" +req.body.cardholder);
-    console.log("creditcard :" +req.body.creditcard);
-    console.log("cvv :" +req.body.cvv);
-    console.log("expdate :" +req.body.expdate);
     var email = req.body.email;
-    var name = req.body.name;
-    var userid = req.body.userid;
+    var first_name = req.body.first_name;
+    var last_name = req.body.last_name;
+    var user_id = req.body.user_id;
     var phone = req.body.phone;
-    var cardholder = req.body.cardholder;
-    var creditcard = req.body.creditcard;
+    var card_holder_name = req.body.card_holder_name;
+    var credit_card = req.body.credit_card;
     var cvv = req.body.cvv;
+    var address = req.body.address;
+    var city = req.body.city;
+    var state = req.body.state;
+    var zipcode = req.body.zipcode;
     var expdate = req.body.expdate;
- 
 
+    var data = {
+        user_id:user_id,
+        email : email,
+        first_name : first_name,
+        last_name : last_name,
+        phone : phone,
+        card_holder_name : card_holder_name,
+        credit_card : credit_card,
+        cvv : cvv,
+        address : address,
+        city : city,
+        state : state,
+        zipcode : zipcode,
+        expdate : expdate
 
-
+    }
 
 
     mongo.connect(function (db) {
 
 
         var coll = db.collection('profiletable');
-            coll.findOne({'name': name}, function (err, user) {
+            coll.findOne({'user_id': user_id}, function (err, user) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -158,41 +201,17 @@ router.post('/editprofile',function (req, res, next) {
                     }
             else if (user) {
 
-            coll.remove({'name':name},function(err,obj){
+            coll.remove({'user_id':user_id},function(err,obj){
                 console.log(" document(s) deleted");
-                var data={
-                    name:name,
-                    email:email,
-                    phone:phone,
-                    cardholder:cardholder,
-                    creditcard:creditcard,
-                    userid:userid,
-                    cvv:cvv,
-                    expdate:expdate
-                }
                 mongo.insertDocument(db, 'profiletable', data, function (err, results) {
                     console.log("Profile Edited Successfully")
                     res.send({message: "Profile edited successfully!"});
                 });
 
-
-
             });
 
- 
             }
             else{
-
-                var data={
-                    name:name,
-                    email:email,
-                    phone:phone,
-                    cardholder:cardholder,
-                    creditcard:creditcard,
-                    userid:userid,
-                    cvv:cvv,
-                    expdate:expdate
-                }
                 mongo.insertDocument(db, 'profiletable', data, function (err, results) {
                     console.log("Profile Edited Successfully")
                     res.send({message: "Profile edited successfully!"});
@@ -256,39 +275,39 @@ router.post('/ticketing', function (req, res, next) {
         })
     })
 })
+
 router.post('/addmovies', function (req, res, next) {
     console.log("in addmovies");
 
-    var title = req.body.title;
-    var trailer = req.body.trailer;
+    var movieId =  Math.floor(Math.random() * Math.floor(9999));
+    var movieName = req.body.movieName;
     var cast = req.body.cast;
-    var user_id =  Math.floor(Math.random() * Math.floor(9999));
-    var release_date = req.body.release_date;
+    var movieTiming=req.body.movieTiming;
+    var movieType=req.body.movieType;
+    var movieVideoLink=req.body.movieVideoLink;
     var rating = req.body.rating;
     var photos = req.body.photos;
     var length = req.body.length;
-    var theatres = req.body.theatres;
     var reviews = req.body.reviews;
 
     var data = {
-        title : title,
-        trailer : trailer,
+        movieId : movieId,
+        movieName : movieName,
         cast : cast,
-        release_date: release_date,
-        rating: rating,
+        movieTiming: movieTiming,
+        movieType: movieType,
+        rating:rating,
+        movieVideoLink:movieVideoLink,
         photos: photos,
         length: length,
-        theatres: theatres,
         reviews: reviews
-
-
     }
 
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-        var coll = db.collection('addmovie');
-        coll.findOne({'title':title},function (err,user) {
+        var coll = db.collection('movietable');
+        coll.findOne({'movieName':movieName},function (err,user) {
             if(err){
                 console.log("sending status 401")
                 res.json({
@@ -296,14 +315,18 @@ router.post('/addmovies', function (req, res, next) {
                 });
             }
             else if(user){
-                console.log("sending status 401")
-                res.json({
-                    status : false
+                var myquery = {movieName: movieName};
+                var coll = db.collection('movietable');
+                var newvalues = {$set: {cast: cast, movieTiming: movieTiming,movieType:movieType,rating:rating,movieVideoLink:movieVideoLink,photos:photos,length:length,reviews:reviews}};
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
                 });
             }
 
             else{
-                mongo.insertDocument(db,'addmovie',data,function (err,results) {
+                mongo.insertDocument(db,'movietable',data,function (err,results) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -323,7 +346,6 @@ router.post('/addmovies', function (req, res, next) {
         })
     });
 });
-
 
 router.post('/getmovies', function (req, res, next) {
 
@@ -346,7 +368,6 @@ router.post('/getmovies', function (req, res, next) {
                     res.json({
                         moviedata: user
                     });
-
                 }
             });
         });
@@ -356,34 +377,169 @@ router.post('/getmovies', function (req, res, next) {
 
 router.post('/addhall', function (req, res, next) {
     console.log("in addhall");
-
-    var time1 = req.body.time1;
-    var time2 = req.body.time2;
-    var time3 = req.body.time3;
-    var user_id =  Math.floor(Math.random() * Math.floor(9999));
-    var time4 = req.body.time4;
-    var time5 = req.body.time5;
-    var tickets = req.body.tickets;
-    var screen = req.body.screen;
-    var price = req.body.price;
-
+        var hallName = req.body.hallName;
+    var hallId = req.body.hallId;
+    var hallAddress = req.body.hallAddress;
+    var type = req.body.type;
+    console.log("type is"+ type);
     var data = {
-        time1 : time1,
-        time2 : time2,
-        time3 : time3,
-        time4: time4,
-        time5: time5,
-        tickets: tickets,
-        screen: screen,
-        price: price
-
-
+        hallName : hallName,
+        hallId : hallId,
+        hallAddress : hallAddress
     }
 
     mongo.connect(function(db){
         console.log("Connected to MongoDB at ",url)
 
-                mongo.insertDocument(db,'addhall',data,function (err,results) {
+        if(type==='add') {
+            console.log("in adder");
+
+            mongo.insertDocument(db, 'addhall', data, function (err, results) {
+                if (err) {
+                    console.log("sending status 401")
+                    res.json({
+                        status: false
+                    });
+                }
+                else {
+                    console.log("Movie hall added successfully")
+                    var path = results["ops"][0]["_id"];
+                    console.log(path);
+                    res.json({
+                        status: true,
+                    });
+                }
+            });
+        }
+        else {
+
+            console.log("in update function", hallId, hallName, hallAddress);
+            var myquery = {hallId: hallId};
+            var coll = db.collection('addhall');
+            var newvalues = {$set: {hallName: hallName, hallAddress: hallAddress}};
+            coll.updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("1 document updated");
+                db.close();
+            });
+        }
+
+    });
+});
+
+
+
+
+router.post('/addHall', function (req, res, next) {
+    console.log("in addhall");
+
+    var hallName = req.body.hallName;
+    var hallId = req.body.hallId;
+    var hallAddress = req.body.hallAddress;
+    var type = req.body.type;
+    console.log("type is"+ type);
+    var data = {
+        hallName : hallName,
+        hallId : hallId,
+        hallAddress : hallAddress
+    }
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+
+        if(type==='add') {
+            console.log("in adder");
+
+            mongo.insertDocument(db, 'addhall', data, function (err, results) {
+                if (err) {
+                    console.log("sending status 401")
+                    res.json({
+                        status: false
+                    });
+                }
+                else {
+                    console.log("Movie hall added successfully")
+                    var path = results["ops"][0]["_id"];
+                    console.log(path);
+                    res.json({
+                        status: true,
+                    });
+                }
+            });
+        }
+        else {
+
+            console.log("in update function", hallId, hallName, hallAddress);
+            var myquery = {hallId: hallId};
+            var coll = db.collection('addhall');
+            var newvalues = {$set: {hallName: hallName, hallAddress: hallAddress}};
+            coll.updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("1 document updated");
+                db.close();
+            });
+        }
+
+    });
+});
+
+
+router.post('/getMovieHalls', function (req, res, next) {
+
+    console.log("Reached all get halls");
+    mongo.connect(function (db) {
+        console.log("Connected to MongoDB at ", url)
+
+        mongo.connect(function (db) {
+            var coll = db.collection('addhall');
+            console.log("dummy");
+            coll.find({}).toArray(function (err, user) {
+                if (err) {
+                    console.log("err")
+                    res.json({
+                        status: '401'
+                    });
+                }
+                else {
+                    console.log("no err",user)
+                    res.json({
+                        hallData: user
+                    });
+
+                }
+            });
+        });
+    });
+});
+
+
+router.post('/analytics', function (req, res, next) {
+    console.log("analytics",req.body)
+var numofclicks = req.body.numofclick;
+var componentname = req.body.componentname;
+var userid = req.body.userid;
+console.log("num of clicks",numofclicks)
+
+ var   data={
+        numofclicks:numofclicks,
+        componentname:componentname,
+        userid:userid
+    }
+
+    mongo.connect(function(db){
+
+        var ana = db.collection('analytics');
+       
+        ana.find({"userid":userid,"componentname":componentname}).toArray(function (err, user) {
+            if (err) {
+                console.log("err")
+                res.json({
+                    status: '401'
+                });
+            }
+            else if(user.length<1){
+
+                mongo.insertDocument(db,'analytics',data,function (err,results) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -391,7 +547,7 @@ router.post('/addhall', function (req, res, next) {
                         });
                     }
                     else {
-                        console.log("Movie hall added successfully")
+                        console.log("User Added to Hall")
                         var path = results["ops"][0]["_id"];
                         console.log(path);
                         res.json({
@@ -399,11 +555,302 @@ router.post('/addhall', function (req, res, next) {
                         });
                     }
                 });
+   
+            }
+            else {
+                    console.log("user",user)
+                var myquery = {"userid":userid,"componentname":componentname};
+                var oldclick = user[0].numofclicks;
+             
+                console.log("old click",user.numofclicks,user[0])
+                var newvalues = {$set: {"numofclicks": (parseFloat(numofclicks) + parseFloat(oldclick))}};
+                ana.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("one doc updated");
+                    db.close();
+                });
+            }
+        });
+
+
+
+
+
+
 
 
     });
+
+
+
+
+    });
+
+
+
+router.post('/addUserToHall', function (req, res, next) {
+    console.log("in addUserToHall");
+
+    var hallUserEmail = req.body.email;
+    var userEmail = req.body.hallUserEmail;
+    var hallId = req.body.hallId;
+    var password = req.body.password;
+    console.log("in addUserToHall"+hallUserEmail+userEmail+hallId+password);
+    var hallUserId =  Math.floor(Math.random() * Math.floor(9999));
+    var data = {
+        hallUserEmail : hallUserEmail,
+        hallId : hallId,
+        password:password,
+        hallUserId:hallUserId
+    }
+
+    mongo.connect(function(db) {
+        var coll = db.collection('UserHall');
+        coll.findOne({'hallUserEmail': userEmail}, function (err, user) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
+                });
+            }
+            else if (user) {
+                var myquery = {hallUserEmail: userEmail};
+                var coll = db.collection('UserHall');
+                var newvalues = {
+                    $set: {
+                        hallUserEmail: hallUserEmail,
+                        password: password,
+                        hallUserId: hallUserId
+                    }
+                };
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err) throw err;
+                    console.log("1 document updated");
+                    db.close();
+                });
+            }
+
+            else {
+                mongo.insertDocument(db, 'UserHall', data, function (err, results) {
+                    if (err) {
+                        console.log("sending status 401")
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log("User Added to Hall")
+                        var path = results["ops"][0]["_id"];
+                        console.log(path);
+                        res.json({
+                            status: true,
+                        });
+                    }
+                });
+            }
+        })
+    });
+
+
+
 });
 
+
+
+router.post('/payment', function (req, res, next) {
+    console.log("in payment");
+    var user_id = req.body.user_id;
+    var name = req.body.name;
+    var creditcard = req.body.creditcard;
+    var cvv = req.body.cvv;
+    var expdate = req.body.expdate;
+    var movieid = req.body.movieid;
+    var movieName = req.body.movieName;
+    var total_amount = req.body.total_amount;
+    var total_tickets = req.body.total_tickets;
+    var genre=req.body.genre;
+    var release=req.body.release;
+    var timings=req.body.timings;
+    var theatrename=req.body.theatrename;
+    var student=req.body.student;
+    var children=req.body.children;
+    var general=req.body.general;
+
+    var data = {
+        user_id :user_id,
+        name : name,
+        creditcard: creditcard,
+        cvv : cvv,
+        expdate : expdate,
+        movieid : movieid,
+        movieName: movieName,
+        genre:genre,
+        release:release,
+        total_amount: total_amount,
+        total_tickets: total_tickets,
+        timings:timings,
+        theatrename:theatrename,
+        student:student,
+        children:children,
+        general:general
+    }
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+
+        mongo.insertDocument(db,'payment',data,function (err,results) {
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
+                });
+            }
+            else {
+                console.log("payment added successfully")
+                var path = results["ops"][0]["_id"];
+                console.log(path);
+                res.json({
+                    value:data,
+                    status: true,
+                });
+            }
+        });
+    });
+});
+
+
+
+
+
+
+router.post('/viewAllUsers', function (req, res, next) {
+
+
+    var hallId = req.body.hallId;
+    console.log("in viewAllUsers",hallId);
+
+    mongo.connect(function(db){
+        console.log("Connected to MongoDB at ",url)
+        var coll = db.collection("UserHall");
+        coll.find({hallId:hallId}).toArray(function(err, user) {
+
+            if (err) {
+                console.log("sending status 401")
+                res.json({
+                    status: false
+                });
+            }
+            else {
+                var path = results["ops"][0]["_id"];
+                console.log(path);
+                res.json({
+                    value:data,
+                    status: true,
+                });
+            }
+        });
+    });
+});
+
+
+router.post('/realticket', function (req, res, next) {
+
+    var user_id = Number(req.body.user_id);
+    console.log(user_id);
+    console.log("reached real ticket");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('payment');
+        coll.findOne({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                console.log(user);
+                res.json({
+                    bill: user
+                });
+            }
+        });
+    });
+});
+
+
+
+router.post('/delprofile', function (req, res, next) {
+
+    var user_id = req.body.user_id;
+    console.log(user_id);
+    console.log("reached delete profile");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('usertable');
+        coll.remove({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                res.json({
+                    status: true
+                });
+            }
+        });
+    });
+});
+
+router.post('/viewprofile', function (req, res) {
+
+    var user_id = req.body.user_id;
+    console.log(user_id);
+    console.log("reached view profile");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('usertable');
+        coll.findOne({'user_id': user_id}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                //res.send(404)
+            }
+            else {
+                console.log(user_id);
+                var collect=db.collection('profiletable');
+                collect.findOne({'user_id': user_id}, function(err,results){
+                    if (err) {
+                        res.json({
+                            status: false
+                        });
+                    }
+                    else {
+                        console.log(results)
+                        res.json({
+                            editProfile:results
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
 
 
 router.post('/movieuserlogin', function (req, res, next) {
@@ -782,7 +1229,290 @@ router.post('/deletebooking', function (req, res, next) {
 });
 
 
+router.post('/toprevenuehalls', function (req, res, next) {
 
+    // var email = req.body.email;
+    //var password = req.body.password;
+    //console.log("reached movieloginlogin");
+    //console.log("email",email);
+    //console.log("pwd",password);
+    //var hallId=0;
+    //var hall_name='';
+    //var hall_address='';
+    var halls_list=[];
+    var i=0;
+    var j=0;
+    var data={
+        halls:[],
+        amount:[]
+
+    };
+
+    mongo.connect(function (db) {
+        var coll = db.collection('addhall');
+        var coll2 = db.collection('payment');
+        coll.find({}).toArray(function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            if (!user) {
+                console.log('UserHall query unsuccessfull');
+
+                res.json({
+                    status: false
+
+                });
+            }
+            else {
+
+                //dummy=user.Username;
+
+
+
+                console.log("User hall query is successfull", user);
+                for(i=0;i<user.length;i++)
+                {
+                    halls_list.push(user[i].hallName);
+
+                }
+                console.log("halls_list:",halls_list);
+                coll2.find({}).toArray(function (err, user) {
+                    if (err) {
+                        res.json({
+                            status: false
+                        });
+                    }
+                    if (!user) {
+                        console.log('payment query fail ');
+
+                        res.json({
+                            status: false
+
+                        });
+                    }
+                    else {
+
+                        console.log("payment query succesfull and data:",user)
+                        //dummy=user.Username;
+                        var total=0;
+                        len1 = halls_list.length;
+                        for(i=0;i<len1;i++)
+                        {
+                            data.halls.push(halls_list[i]);
+                            for(j=0;j<user.length;j++)
+                            {
+                                if(halls_list[i]==user[j].theatrename)
+                                {
+                                    total +=parseInt(user[j].total_tickets);
+                                }
+
+                            }
+
+                            data.amount.push(total);
+                            total=0;
+
+                        }
+
+                        console.log("final data",data);
+
+
+
+                        res.json({
+                            status: true,
+                            halls_list:data.halls,
+                            revenue_list: data.amount
+
+
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+
+
+router.post('/toprevenuemovies', function (req, res, next) {
+
+    // var email = req.body.email;
+    //var password = req.body.password;
+    //console.log("reached movieloginlogin");
+    //console.log("email",email);
+    //console.log("pwd",password);
+    //var hallId=0;
+    //var hall_name='';
+    //var hall_address='';
+    var movies_list=[];
+    var i=0;
+    var j=0;
+    var data={
+        movies:[],
+        amount:[]
+
+    };
+
+    mongo.connect(function (db) {
+
+        var coll2 = db.collection('payment');
+        coll2.find({}).toArray(function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            if (!user) {
+                console.log('Payment query for all movies unsuccessfull');
+
+                res.json({
+                    status: false
+
+                });
+            }
+            else {
+
+                //dummy=user.Username;
+
+
+
+                console.log("Payment query for all movies successfull", user);
+                for(i=0;i<user.length;i++)
+                {
+                    movies_list.push(user[i].movieName);
+
+                }
+                console.log("movies_list:",movies_list);
+                coll2.find({}).toArray(function (err, user) {
+                    if (err) {
+                        res.json({
+                            status: false
+                        });
+                    }
+                    if (!user) {
+                        console.log('payment query fail ');
+
+                        res.json({
+                            status: false
+
+                        });
+                    }
+                    else {
+
+                        console.log("payment query succesfull and data:",user)
+                        //dummy=user.Username;
+                        var total=0;
+                        len1 = movies_list.length;
+                        for(i=0;i<len1;i++)
+                        {
+                            data.movies.push(movies_list[i]);
+                            for(j=0;j<user.length;j++)
+                            {
+                                if(movies_list[i]==user[j].movieName)
+                                {
+                                    total +=parseInt(user[j].total_amount);
+                                }
+
+                            }
+
+                            data.amount.push(total);
+                            total=0;
+
+                        }
+
+                        console.log("final data",data);
+
+
+
+                        res.json({
+                            status: true,
+                            movies_list:data.movies,
+                            revenue_list: data.amount
+
+
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+
+
+router.post('/pageclicks', function (req, res, next) {
+
+    // var email = req.body.email;
+    //var password = req.body.password;
+    //console.log("reached movieloginlogin");
+    //console.log("email",email);
+    //console.log("pwd",password);
+    //var hallId=0;
+    //var hall_name='';
+    //var hall_address='';
+
+    var pages_list=['Movies', 'Movies details', 'Number of Tickets', 'Payments', 'Tickets', 'Profile', 'Reviews'];
+    var i=0;
+    var j=0;
+    var data={
+        users:[],
+        clicks:[]
+
+    };
+
+    mongo.connect(function (db) {
+        var coll2 = db.collection('analytics');
+        coll2.find({}).toArray(function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            if (!user) {
+                console.log('usertable query for all users unsuccessfull');
+
+                res.json({
+                    status: false
+
+                });
+            }
+            else {
+
+                //dummy=user.Username;
+                var total=0;
+                len1 = pages_list.length;
+                for(i=0;i<len1;i++)
+                {
+                    data.pages.push(pages_list[i]);
+                    for(j=0;j<user.length;j++)
+                    {
+                        if(pages_list[i]==user[j].componentname)
+                        {
+                            total +=parseInt(user[j].total_amount);
+                        }
+
+                    }
+
+                    data.amount.push(total);
+                    total=0;
+
+                }
+
+                console.log("final data",data);
+
+
+
+                res.json({
+                    status: true,
+                    movies_list:data.movies,
+                    revenue_list: data.amount
+
+                });
+
+
+            }
+        });
+    });
+});
 
 
 module.exports = router;
