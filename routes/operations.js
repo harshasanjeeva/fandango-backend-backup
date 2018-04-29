@@ -707,7 +707,7 @@ router.post('/realticket', function (req, res, next) {
 
     mongo.connect(function (db) {
         var coll = db.collection('payment');
-        coll.findOne({'user_id': user_id}, function (err, user) {
+        coll.find({'user_id': user_id}).toArray(function (err, user) {
             if (err) {
                 res.json({
                     status: false
@@ -792,6 +792,74 @@ router.post('/viewprofile', function (req, res) {
                             editProfile:results
                         });
                     }
+                });
+            }
+        });
+    });
+});
+
+
+
+router.post('/getreviews', function (req, res, next) {
+
+    var movieName = req.body.movieName;
+    console.log(movieName);
+    console.log("reached getreviews profile");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('movietable');
+        coll.findOne({'movieName': movieName}, function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                res.json({
+                    reviews:user.reviews
+                });
+            }
+        });
+    });
+});
+
+router.post('/subreviews', function (req, res, next) {
+
+    var movieName = req.body.movieName;
+    var reviews = req.body.reviews;
+    console.log(movieName,reviews);
+    console.log("reached submit reviews");
+
+    mongo.connect(function (db) {
+        var coll = db.collection('movietable');
+        coll.findOne({'movieName': movieName },function (err, user) {
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else {
+                var reviewarr=user.reviews;
+                reviewarr.push(reviews);
+                var myquery = {movieName: movieName};
+                var newvalues = {
+                    $set: {
+                        reviews: reviewarr
+                    }
+                };
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err)
+                        throw err;
+                    console.log("document updated");
+                    db.close();
+                });
+                res.json({
+                    status:200
                 });
             }
         });
