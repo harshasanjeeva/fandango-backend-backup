@@ -156,36 +156,43 @@ router.post('/signup', function (req, res, next) {
 
 router.post('/editprofile',function (req, res, next) {
 
-    console.log("body---->email",req.body)
-    
-    console.log("email :" +req.body.email);
-    console.log("phone :" +req.body.phone);
-    console.log("name :" +req.body.name);
-
-    console.log("userid :" +req.body.userid);
-    console.log("cardholder :" +req.body.cardholder);
-    console.log("creditcard :" +req.body.creditcard);
-    console.log("cvv :" +req.body.cvv);
-    console.log("expdate :" +req.body.expdate);
     var email = req.body.email;
-    var name = req.body.name;
-    var userid = req.body.userid;
+    var first_name = req.body.first_name;
+    var last_name = req.body.last_name;
+    var user_id = req.body.user_id;
     var phone = req.body.phone;
-    var cardholder = req.body.cardholder;
-    var creditcard = req.body.creditcard;
+    var card_holder_name = req.body.card_holder_name;
+    var credit_card = req.body.credit_card;
     var cvv = req.body.cvv;
+    var address = req.body.address;
+    var city = req.body.city;
+    var state = req.body.state;
+    var zipcode = req.body.zipcode;
     var expdate = req.body.expdate;
- 
 
+    var data = {
+        user_id:user_id,
+        email : email,
+        first_name : first_name,
+        last_name : last_name,
+        phone : phone,
+        card_holder_name : card_holder_name,
+        credit_card : credit_card,
+        cvv : cvv,
+        address : address,
+        city : city,
+        state : state,
+        zipcode : zipcode,
+        expdate : expdate
 
-
+    }
 
 
     mongo.connect(function (db) {
 
 
         var coll = db.collection('profiletable');
-            coll.findOne({'name': name}, function (err, user) {
+            coll.findOne({'user_id': user_id}, function (err, user) {
                     if (err) {
                         console.log("sending status 401")
                         res.json({
@@ -194,41 +201,17 @@ router.post('/editprofile',function (req, res, next) {
                     }
             else if (user) {
 
-            coll.remove({'name':name},function(err,obj){
+            coll.remove({'user_id':user_id},function(err,obj){
                 console.log(" document(s) deleted");
-                var data={
-                    name:name,
-                    email:email,
-                    phone:phone,
-                    cardholder:cardholder,
-                    creditcard:creditcard,
-                    userid:userid,
-                    cvv:cvv,
-                    expdate:expdate
-                }
                 mongo.insertDocument(db, 'profiletable', data, function (err, results) {
                     console.log("Profile Edited Successfully")
                     res.send({message: "Profile edited successfully!"});
                 });
 
-
-
             });
 
- 
             }
             else{
-
-                var data={
-                    name:name,
-                    email:email,
-                    phone:phone,
-                    cardholder:cardholder,
-                    creditcard:creditcard,
-                    userid:userid,
-                    cvv:cvv,
-                    expdate:expdate
-                }
                 mongo.insertDocument(db, 'profiletable', data, function (err, results) {
                     console.log("Profile Edited Successfully")
                     res.send({message: "Profile edited successfully!"});
@@ -745,33 +728,7 @@ router.post('/realticket', function (req, res, next) {
     });
 });
 
-router.post('/editprofile', function (req, res, next) {
 
-    var user_id = req.body.user_id;
-    console.log(user_id);
-    console.log("reached real ticket");
-
-    mongo.connect(function (db) {
-        var coll = db.collection('payment');
-        coll.findOne({'user_id': user_id}, function (err, user) {
-            if (err) {
-                res.json({
-                    status: false
-                });
-            }
-            else if(!user)
-            {
-                console.log("user not found")
-                res.send(404)
-            }
-            else {
-                res.json({
-                    bill: user
-                });
-            }
-        });
-    });
-});
 
 router.post('/delprofile', function (req, res, next) {
 
@@ -803,7 +760,7 @@ router.post('/delprofile', function (req, res, next) {
 
 router.post('/viewprofile', function (req, res) {
 
-    var user_id = req.body.userid;
+    var user_id = req.body.user_id;
     console.log(user_id);
     console.log("reached view profile");
 
@@ -821,8 +778,9 @@ router.post('/viewprofile', function (req, res) {
                 //res.send(404)
             }
             else {
-                var collect=db.collection('profiletable')
-                collect.findOne({'email':user.email}), function(err,results){
+                console.log(user_id);
+                var collect=db.collection('profiletable');
+                collect.findOne({'user_id': user_id}, function(err,results){
                     if (err) {
                         res.json({
                             status: false
@@ -831,17 +789,10 @@ router.post('/viewprofile', function (req, res) {
                     else {
                         console.log(results)
                         res.json({
-                            First_Name: results.First_Name,
-                            Last_Name: results.Last_Name,
-                            address: results.address,
-                            city: results.city,
-                            state: results.state,
-                            zipcode: results.zipcode,
-                            phone: results.phone,
-                            email: results.email
+                            editProfile:results
                         });
                     }
-                }
+                });
             }
         });
     });
