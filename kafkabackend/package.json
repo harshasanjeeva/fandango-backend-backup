@@ -1,0 +1,27 @@
+{
+  "name": "kafka-backend",
+  "version": "1.0.0",
+  "description": "Starting demo",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Neha Jethani",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.5.0",
+    "bcrypt": "^1.0.3",
+    "buffer": "^5.0.8",
+    "express": "~4.15.2",
+    "kafka-node": "^2.2.3",
+    "mongodb": "^2.2.31",
+    "node-mailer": "^0.1.1",
+    "nodemailer": "^4.3.1",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "stream": "0.0.2",
+    "stream-buffers": "^3.0.1",
+    "zip-folder": "^1.0.0"
+  }
+}

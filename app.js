@@ -1,6 +1,5 @@
 var express = require('express');
 var path = require('path');
-
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var cors = require('cors');
@@ -12,7 +11,6 @@ var operations = require('./routes/operations');
 var logout = require('./routes/logout');
 var app = express();
 var passport = require('passport');
-
 /*var mongoSessionURL = "mongodb://devfandango:fandango1@ds251819.mlab.com:51819/sessions";*/
 var expressSessions = require("express-session");
 require('./routes/mongodb/login')(passport);

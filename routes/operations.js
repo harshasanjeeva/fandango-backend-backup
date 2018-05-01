@@ -1,13 +1,8 @@
-//import { parse } from 'url';
-
 var express = require('express');
 var router = express.Router();
-//var expressValidator = require('express-validator');
 var mongo = require('./mongodb/mongo');
 var kafka = require('./kafka/client');
 var loginStatus=false;
-//var url = 'mongodb://localhost:27017/freelancer';
-
 var session = require('client-sessions');
 var url='mongodb://devfandango:fandango1@ds251819.mlab.com:51819/fandango'
 var expressSessions = require("express-session");
@@ -373,6 +368,40 @@ router.post('/getmovies', function (req, res, next) {
         });
     });
 });
+
+
+
+
+
+router.post('/actiongetthreatre', function (req, res, next) {
+
+    console.log("Reached to all get actiongetthreatre",req.body);
+
+var moviename = req.body.movieName
+    mongo.connect(function (db) {
+        console.log("Connected to MongoDB at ", url)
+
+        mongo.connect(function (db) {
+            var coll = db.collection('moviehalldetails');
+            console.log("dummy");
+            coll.find({'moviename':moviename}).toArray(function (err, user) {
+                if (err) {
+                    console.log("err")
+                    res.json({
+                        status: '401'
+                    });
+                }
+                else {
+                    console.log("no err",user)
+                    res.json({
+                        moviedata: user
+                    });
+                }
+            });
+        });
+    });
+});
+
 
 
 router.post('/addhall', function (req, res, next) {
@@ -853,7 +882,6 @@ router.post('/viewprofile', function (req, res) {
 });
 
 
-<<<<<<< HEAD
 
 router.post('/getreviews', function (req, res, next) {
 
@@ -864,7 +892,34 @@ router.post('/getreviews', function (req, res, next) {
     mongo.connect(function (db) {
         var coll = db.collection('movietable');
         coll.findOne({'movieName': movieName}, function (err, user) {
-=======
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+            else if(!user)
+            {
+                console.log("user not found")
+                res.send(404)
+            }
+            else {
+                res.json({
+                    reviews:user.reviews
+                });
+            }
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
+
 router.post('/movieuserlogin', function (req, res, next) {
 
     var email = req.body.email;
@@ -1034,6 +1089,9 @@ router.post('/addmoviehalldata', function (req, res, next) {
         var screen = req.body.screen;
         var price = req.body.price;
         var movieTiming = req.body.movieTiming;
+        var  theatreName = req.body.theatreName;
+        var theatreId= req.body.theatreId ;
+        var theatreAddress = req.body.theatreAddress;
 
         var data = {
             moviename : moviename,
@@ -1047,8 +1105,10 @@ router.post('/addmoviehalldata', function (req, res, next) {
             tickets: tickets,
             screen: screen,
             price : price,
-            movieTiming:movieTiming
-
+            movieTiming:movieTiming,
+            theatreId:theatreId,
+            theatreName:theatreName,
+            theatreAddress:theatreAddress,
 
         }
 
@@ -1094,23 +1154,12 @@ router.post('/gethalldata', function (req, res, next) {
     mongo.connect(function (db) {
         var coll = db.collection('UserHall');
         coll.findOne({'hallId': hallId}, function (err, user) {
->>>>>>> 0131a8dc48b3716ac44d03f700362ac9e2056cc6
             if (err) {
                 res.json({
                     status: false
                 });
             }
-<<<<<<< HEAD
-            else if(!user)
-            {
-                console.log("user not found")
-                res.send(404)
-            }
-            else {
-                res.json({
-                    reviews:user.reviews
-=======
-            if (!user) {
+            else if (!user) {
                 console.log('User Not Found with hallId ' + hallId);
 
                 res.json({
@@ -1128,14 +1177,12 @@ router.post('/gethalldata', function (req, res, next) {
                     hall_name: hallname,
                     hall_address: halladdress,
                     status: true
->>>>>>> 0131a8dc48b3716ac44d03f700362ac9e2056cc6
                 });
             }
         });
     });
 });
 
-<<<<<<< HEAD
 router.post('/subreviews', function (req, res, next) {
 
     var movieName = req.body.movieName;
@@ -1146,7 +1193,40 @@ router.post('/subreviews', function (req, res, next) {
     mongo.connect(function (db) {
         var coll = db.collection('movietable');
         coll.findOne({'movieName': movieName },function (err, user) {
-=======
+            if (err) {
+                res.json({
+                    status: false
+                });
+            }
+
+            else {
+                var reviewarr=user.reviews;
+                reviewarr.push(reviews);
+                var myquery = {movieName: movieName};
+                var newvalues = {
+                    $set: {
+                        reviews: reviewarr
+                    }
+                };
+                coll.updateOne(myquery, newvalues, function (err, res) {
+                    if (err)
+                        throw err;
+                    console.log("document updated");
+                    db.close();
+                });
+                res.json({
+                    status:200
+                });
+            }
+        });
+    });
+});
+
+
+
+
+
+
 
 
 
@@ -1288,36 +1368,12 @@ router.post('/toprevenuehalls', function (req, res, next) {
         var coll = db.collection('addhall');
         var coll2 = db.collection('payment');
         coll.find({}).toArray(function (err, user) {
->>>>>>> 0131a8dc48b3716ac44d03f700362ac9e2056cc6
             if (err) {
                 res.json({
                     status: false
                 });
             }
-<<<<<<< HEAD
-            else {
-                var reviewarr=user.reviews;
-                reviewarr.push(reviews);
-                var myquery = {movieName: movieName};
-                var newvalues = {
-                    $set: {
-                        reviews: reviewarr
-                    }
-                };
-                coll.updateOne(myquery, newvalues, function (err, res) {
-                    if (err)
-                        throw err;
-                    console.log("document updated");
-                    db.close();
-                });
-                res.json({
-                    status:200
-                });
-            }
-        });
-    });
-});
-=======
+     
             if (!user) {
                 console.log('UserHall query unsuccessfull');
 
@@ -1576,5 +1632,4 @@ router.post('/pageclicks', function (req, res, next) {
 });
 
 
->>>>>>> 0131a8dc48b3716ac44d03f700362ac9e2056cc6
 module.exports = router;
